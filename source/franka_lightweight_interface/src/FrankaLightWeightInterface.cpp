@@ -25,7 +25,7 @@ static std::array<double, 7> default_joint_impedance_values() {
 }
 
 FrankaLightWeightInterface::FrankaLightWeightInterface(
-    std::string robot_ip, std::string state_uri, std::string command_uri, std::string torque_uri, std::string prefix
+    std::string robot_ip, std::string state_uri, std::string command_uri, std::string motor_uri, std::string prefix
 ) :
     prefix_(std::move(prefix)),
     robot_ip_(std::move(robot_ip)),
@@ -33,7 +33,7 @@ FrankaLightWeightInterface::FrankaLightWeightInterface(
     shutdown_(false),
     state_uri_(std::move(state_uri)),
     command_uri_(std::move(command_uri)),
-    torque_uri_(std::move(torque_uri)),
+    motor_uri_(std::move(motor_uri)),
     zmq_context_(1),
     control_type_(network_interfaces::control_type_t::UNDEFINED),
     joint_damping_gains_(default_joint_damping_gains()),
@@ -53,7 +53,7 @@ void FrankaLightWeightInterface::init() {
   // TODO: find a better way to pass in port number
   network_interfaces::zmq::configure_subscriber(this->zmq_context_, this->zmq_subscriber_, this->command_uri_, false);
   network_interfaces::zmq::configure_publisher(this->zmq_context_, this->zmq_publisher_, this->state_uri_, false);
-  network_interfaces::zmq::configure_publisher(this->zmq_context_, this->zmq_publisher_torque_, this->torque_uri_, false);
+  network_interfaces::zmq::configure_publisher(this->zmq_context_, this->zmq_publisher_motor_, this->motor_uri_, false);
 
   if (this->prefix_.empty()) {
     this->prefix_ = "franka_";
@@ -190,8 +190,8 @@ void FrankaLightWeightInterface::publish_robot_state() {
   network_interfaces::zmq::send(this->state_, this->zmq_publisher_);
 }
 
-void FrankaLightWeightInterface::publish_robot_torque() {
-  network_interfaces::zmq::send(this->torque_, this->zmq_publisher_torque_);
+void FrankaLightWeightInterface::publish_robot_motor() {
+  network_interfaces::zmq::send(this->motor_, this->zmq_publisher_motor_);
 }
 
 void FrankaLightWeightInterface::read_robot_state(const franka::RobotState& robot_state) {
@@ -349,8 +349,12 @@ void FrankaLightWeightInterface::run_joint_torques_controller() {
           // write the state out to the local socket
           this->publish_robot_state();
 
-          this->torque_.joint_state.set_torques(torque_command.array());
-          this->publish_robot_torque();
+          // extract motor info
+          assert(robot_state.theta.size() == 7);
+          this->motor_.joint_state.set_positions(Eigen::VectorXd::Map(robot_state.theta.data(), 7));
+          this->motor_.joint_state.set_velocities(Eigen::VectorXd::Map(robot_state.dtheta.data(), 7));
+          this->motor_.joint_state.set_torques(torque_command.array());
+          this->publish_robot_motor();
 
           return torques;
         }

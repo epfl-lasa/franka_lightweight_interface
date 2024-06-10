@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
   std::string robot_ip = "172.16.0.2";
   std::string state_uri = "0.0.0.0:1601";
   std::string command_uri = "0.0.0.0:1602";
-  std::string torque_uri = "0.0.0.0:1603";
+  std::string motor_uri = "0.0.0.0:1603";
 
   if (argc <= 2) {
     std::cerr << "Not enough input arguments. Provide at least the robot number and its prefix." << std::endl
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
     robot_ip = "172.17.0.2";
     state_uri = "0.0.0.0:1701";
     command_uri = "0.0.0.0:1702";
-    torque_uri = "0.0.0.0:1703";
+    motor_uri = "0.0.0.0:1703";
   } else if (atof(argv[1]) != 16) {
     std::cerr << "This robot is unknown, choose either '16' or '17'." << std::endl << help_message << std::endl;
     return 1;
@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  FrankaLightWeightInterface flwi(robot_ip, state_uri, command_uri, torque_uri, prefix);
+  FrankaLightWeightInterface flwi(robot_ip, state_uri, command_uri, motor_uri, prefix);
 
   int provided_options = 0;
   char* option = parse_option(argv, argv + argc, "--joint-damping");
