@@ -40,10 +40,13 @@ private:
   bool shutdown_;
   std::string state_uri_; ///< URI of the socket to connect to for publishing state messages
   std::string command_uri_; ///< URI of the socket to connect to for receiving command messages
+  std::string torque_uri_; ///< URI of the socket to connect to for publishing torque messages
   ::zmq::context_t zmq_context_;
   ::zmq::socket_t zmq_publisher_;
+  ::zmq::socket_t zmq_publisher_torque_;
   ::zmq::socket_t zmq_subscriber_;
   network_interfaces::zmq::StateMessage state_;
+  network_interfaces::zmq::StateMessage torque_;
   network_interfaces::zmq::CommandMessage command_;
   network_interfaces::control_type_t control_type_;
   Eigen::ArrayXd joint_damping_gains_;
@@ -64,7 +67,7 @@ public:
    * @param robot_ip ip address of the robot to control
    */
   explicit FrankaLightWeightInterface(
-      std::string robot_ip, std::string state_uri, std::string command_uri, std::string prefix
+      std::string robot_ip, std::string state_uri, std::string command_uri, std::string torque_uri, std::string prefix
   );
 
   /**
@@ -190,6 +193,11 @@ public:
   * @brief Publish robot state to the ZMQ socket for an external controller or observer to receive
   */
   void publish_robot_state();
+
+  /**
+  * @brief Publish robot torque to the ZMQ socket for an external controller or observer to receive
+  */
+  void publish_robot_torque();
 
   /**
    * @brief Read the robot state and update the published elements
