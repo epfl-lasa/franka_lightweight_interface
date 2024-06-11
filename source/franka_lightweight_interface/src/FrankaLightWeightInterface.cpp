@@ -70,6 +70,14 @@ void FrankaLightWeightInterface::init() {
   this->state_.mass =
       state_representation::Parameter<Eigen::MatrixXd>(this->prefix_ + "mass", Eigen::MatrixXd::Zero(7, 7));
 
+  this->motor_.ee_state = state_representation::CartesianState(this->prefix_ + "ee", this->prefix_ + "base");
+  this->motor_.joint_state = state_representation::JointState(robot_name, joint_names);
+  this->motor_.jacobian =
+      state_representation::Jacobian(robot_name, joint_names, this->prefix_ + "ee", this->prefix_ + "base");
+  this->motor_.mass =
+      state_representation::Parameter<Eigen::MatrixXd>(this->prefix_ + "mass", Eigen::MatrixXd::Zero(7, 7));
+
+
   this->command_.control_type = std::vector<int>{static_cast<int>(this->control_type_)};
   this->command_.joint_state = state_representation::JointState("franka", 7);
 
